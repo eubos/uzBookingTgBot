@@ -7,8 +7,8 @@ const bot = new TelegramBot('6173657115:AAHBi9spJsHSwtV1zh-_lgp32tzBj0A_sBQ', { 
 let departurePoint = {};
 let arrivalPoint = {};
 let dateOfJourney = '';
-let listOfDepartureCitiesJSON = [];
-let listOfArrivalCitiesJSON = [];
+let listOfDepCities = [];
+let listOfArrCities = [];
 let observerLog = '';
 let observerCounter = 0;
 let observerSuccessCounter = 0;
@@ -38,18 +38,17 @@ const departure = (chatId) => {
 	bot.on('message', async (msg) => {
 		if (phase == 'departure') {
 			const messageText = msg.text;
-			const listOfCities = await getCity(messageText);
-			listOfDepartureCitiesJSON = JSON.parse(listOfCities);
-			const options = createButtonsMarkup(listOfDepartureCitiesJSON);
+			listOfDepCities = await getCity(messageText);
+			const options = createButtonsMarkup(listOfDepCities);
 			bot.sendMessage(chatId, '⬇️⬇️⬇️Обери пункт відправлення⬇️⬇️⬇️', options);
 		}
 	})
 	bot.on('callback_query', (query) => {
 		if (phase == 'departure') {
 			const optionSelected = query.data;
-			departurePoint.value = optionSelected;
-			departurePoint.title = findNameOfCityByValue(optionSelected, listOfDepartureCitiesJSON);
-			bot.sendMessage(chatId, `Вогонь🔥 Твій пункт відправлення - 🏘${departurePoint.title}`);
+			departurePoint.id = optionSelected;
+			departurePoint.name = findNameOfCityByValue(optionSelected, listOfDepCities);
+			bot.sendMessage(chatId, `Вогонь🔥 Твій пункт відправлення - 🏘${departurePoint.name}`);
 			setTimeout(() => {
 				arrival(chatId);
 			}, 1500);
@@ -62,18 +61,17 @@ const arrival = (chatId) => {
 	bot.on('message', async (msg) => {
 		if (phase == 'arrival') {
 			const messageText = msg.text;
-			const listOfCities = await getCity(messageText);
-			listOfArrivalCitiesJSON = JSON.parse(listOfCities);
-			const options = createButtonsMarkup(listOfArrivalCitiesJSON);
+			listOfArrCities = await getCity(messageText);
+			const options = createButtonsMarkup(listOfArrCities);
 			bot.sendMessage(chatId, '⬇️⬇️⬇️Оберить пункт прибуття⬇️⬇️⬇️', options);
 		}
 	})
 	bot.on('callback_query', (query) => {
 		if (phase == 'arrival') {
 			const optionSelected = query.data;
-			arrivalPoint.value = optionSelected;
-			arrivalPoint.title = findNameOfCityByValue(optionSelected, listOfArrivalCitiesJSON);
-			bot.sendMessage(chatId, `Супер💫 Пункт відправлення - 🏘${departurePoint.title} та пункт прибуття - 🏘${arrivalPoint.title}`);
+			arrivalPoint.id = optionSelected;
+			arrivalPoint.name = findNameOfCityByValue(optionSelected, listOfArrCities);
+			bot.sendMessage(chatId, `Супер💫 Пункт відправлення - 🏘${departurePoint.name} та пункт прибуття - 🏘${arrivalPoint.name}`);
 			setTimeout(() => {
 				date(chatId);
 			}, 1000)
@@ -96,7 +94,7 @@ const date = (chatId) => {
 			const optionSelected = query.data;
 			dateOfJourney = optionSelected;
 
-			bot.sendMessage(chatId, `Чудово✨ Точка відправлення 🏘${departurePoint.title} та точка прибуття 🏘${arrivalPoint.title} 🗓${dateOfJourney}`);
+			bot.sendMessage(chatId, `Чудово✨ Точка відправлення 🏘${departurePoint.name} та точка прибуття 🏘${arrivalPoint.name} 🗓${dateOfJourney}`);
 			searchTickets(chatId);
 		}
 	})
@@ -108,7 +106,7 @@ const searchTickets = async (chatId) => {
 	try {
 		const listOfTrains = await getTrains();
 		if (listOfTrains?.errorCode) {
-			bot.sendMessage(chatId, `Немає вільних квитків з 🏘${departurePoint.title} до 🏘${arrivalPoint.title} 🗓${dateOfJourney}`);
+			bot.sendMessage(chatId, `Немає вільних квитків з 🏘${departurePoint.name} до 🏘${arrivalPoint.name} 🗓${dateOfJourney}`);
 			setTimeout(() => {
 				bot.sendMessage(chatId, `Створити мониторінг квитків? `, createMonitorOptions);
 				phase = 'monitorTickets';
@@ -152,8 +150,8 @@ bot.onText(/\/status/, (msg) => {
 
 });
 
-function findNameOfCityByValue(value, list) {
-	return list.find(o => o.value == value)?.title
+function findNameOfCityByValue(id, list) {
+	return list.find(o => o.id == id)?.name
 }
 
 function createObserver(chatId) {
@@ -164,10 +162,10 @@ function createObserver(chatId) {
 			const listOfTrains = await getTrains();
 			if (listOfTrains?.errorCode) {
 				observerLog += `
-				Немає вільних квитків з 🏘${departurePoint.title} до 🏘${arrivalPoint.title} 🗓${dateOfJourney}
+				Немає вільних квитків з 🏘${departurePoint.name} до 🏘${arrivalPoint.name} 🗓${dateOfJourney}
 				`
 				observerCounter++;
-				// bot.sendMessage(chatId, `Немає вільних квитків з 🏘${departurePoint.title} до 🏘${arrivalPoint.title} 🗓${dateOfJourney}`);
+				// bot.sendMessage(chatId, `Немає вільних квитків з 🏘${departurePoint.name} до 🏘${arrivalPoint.name} 🗓${dateOfJourney}`);
 			} else {
 				observerSuccessCounter++;
 				showAvailableTrains(listOfTrains, chatId);
@@ -221,8 +219,8 @@ function getTrains() {
 		method: 'POST',
 		json: true,
 		body: {
-			arrivalCode: arrivalPoint.value,
-			departureCode: departurePoint.value,
+			arrivalCode: arrivalPoint.id,
+			departureCode: departurePoint.id,
 			departureDate: dateOfJourney,
 			language: "uk",
 			requestId: "90adde2bbb92",
@@ -252,32 +250,62 @@ function getTrains() {
 }
 
 async function getCity(query) {
-	const BASE_URL = 'https://booking.uz.gov.ua/train_search/station/?term=';
-	const WEBSITE_URL = BASE_URL + encodeURIComponent(query);
-
+	const BASE_URL = 'https://de-prod-lb.cashalot.in.ua/rest/stations/express';
 	const options = {
-		url: WEBSITE_URL,
+		url: BASE_URL,
+		method: 'POST',
+		json: true,
+		body: {
+			language: "uk",
+			supplier: "uz_train",
+			requestId: "ab158a7d7499",
+			transactionId: "656468a62c39",
+			sessionId: "ed7a2931972b",
+			userId: "f47b46ad415f",
+			sourceType: "FRONTEND",
+			query
+		}
 	};
-
 	return new Promise(function (resolve, reject) {
-		request.get(options, (error, response) => {
-			console.log('response', response);
-			console.log('error1', error);
+		request(options, (error, response) => {
+			if (error) {
+				reject(error);
+				return;
+			}
 			const res = response.toJSON();
-			if (!error && response.statusCode === 200) {
-				resolve(res.body)
+			if (response.statusCode === 200) {
+				resolve(res.body.cities)
 			} else {
-				reject(error)
+				reject(new Error(`API request failed with status code: ${response.statusCode}`));
 			}
 		});
 	}).catch(error => {
-		console.error('error', error);
+		console.error(error);
 	});
+	// const BASE_URL = 'https://booking.uz.gov.ua/train_search/station/?term=';
+	// const WEBSITE_URL = BASE_URL + encodeURIComponent(query);
+
+	// const options = {
+	// 	url: WEBSITE_URL,
+	// };
+
+	// return new Promise(function (resolve, reject) {
+	// 	request.get(options, (error, response) => {
+	// 		const res = response.toJSON();
+	// 		if (!error && response.statusCode === 200) {
+	// 			resolve(res.body)
+	// 		} else {
+	// 			reject(error)
+	// 		}
+	// 	});
+	// }).catch(error => {
+	// 	console.error('error', error);
+	// });
 }
 
 function createButtonsMarkup(data) {
 	const formattedData = data.map(station => [
-		{ text: station.title, callback_data: station.value.toString() }
+		{ text: station.name, callback_data: station.id.toString() }
 	])
 
 	const options = {
