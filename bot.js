@@ -39,6 +39,7 @@ const departure = (chatId) => {
 		if (phase == 'departure') {
 			const messageText = msg.text;
 			const listOfCities = await getCity(messageText);
+			console.log('listOfCities', listOfCities);
 			listOfDepartureCitiesJSON = JSON.parse(listOfCities);
 			const options = createButtonsMarkup(listOfDepartureCitiesJSON);
 			bot.sendMessage(chatId, '⬇️⬇️⬇️Обери пункт відправлення⬇️⬇️⬇️', options);
