@@ -179,7 +179,7 @@ function createObserver(chatId) {
 
 	}
 	lookForTickets();
-	const int = setInterval(lookForTickets, 20000);
+	const int = setInterval(lookForTickets, 60000);
 }
 
 function showAvailableTrains(listOfTrains, chatId) {
@@ -247,8 +247,7 @@ function getTrains() {
 			}
 		});
 	}).catch(error => {
-		reject(error);
-		throw error;
+		console.error(error);
 	});
 }
 
@@ -270,8 +269,7 @@ async function getCity(query) {
 			}
 		});
 	}).catch(error => {
-		reject(error);
-		throw error;
+		console.error(error);
 	});
 }
 
