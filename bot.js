@@ -39,7 +39,6 @@ const departure = (chatId) => {
 		if (phase == 'departure') {
 			const messageText = msg.text;
 			const listOfCities = await getCity(messageText);
-			console.log('listOfCities', listOfCities);
 			listOfDepartureCitiesJSON = JSON.parse(listOfCities);
 			const options = createButtonsMarkup(listOfDepartureCitiesJSON);
 			bot.sendMessage(chatId, '⬇️⬇️⬇️Обери пункт відправлення⬇️⬇️⬇️', options);
@@ -262,6 +261,8 @@ async function getCity(query) {
 
 	return new Promise(function (resolve, reject) {
 		request.get(options, (error, response) => {
+			console.log('response', response);
+			console.log('error1', error);
 			const res = response.toJSON();
 			if (!error && response.statusCode === 200) {
 				resolve(res.body)
@@ -270,7 +271,7 @@ async function getCity(query) {
 			}
 		});
 	}).catch(error => {
-		console.error(error);
+		console.error('error', error);
 	});
 }
 
